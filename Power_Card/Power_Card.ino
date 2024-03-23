@@ -1,3 +1,11 @@
+#include <Arduino.h>
+#include "CoilControl.h"
+
+
+
+
+
+
 // void setup() {
 //   Serial.begin(115200);
 //   pinMode(2,OUTPUT);
@@ -10,6 +18,11 @@
 //   digitalWrite(2, LOW); //On eteinds la led bleue
 //   delay(500); //On attend pendant 500 ms
 // }
+
+
+
+
+
 
 #define PWM_1 32
 #define PWM_2 33
@@ -39,6 +52,8 @@
 #define Y 39
 #define X 34
 
+CoilControl bobine;
+
 String data = "\0";
 char data_rcvd = 0;
 int count = 0;
@@ -53,6 +68,7 @@ void setup() {
   // digitalWrite(13, LOW);    // switch off LED pin
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);       // initialize UART with baud rate of 9600 bps
+  bobine.begin(); // initialize coil
 }
 
 void loop() {
@@ -89,6 +105,11 @@ void loop() {
   }
   // Serial.println("Hello World!");
 }
+
+
+
+
+
 
 /*
 void loop() {
@@ -167,3 +188,19 @@ int MapAdjustment(int value, int center, int min, int max){
   return value;
 }
 */
+
+
+
+
+
+/*
+void loop() {
+  // Exemple : Définir un courant de 1A pour la bobine 0
+  //bobine.setCoilCurrent(0, 1.0);
+  //delay(1000); // Attendre une seconde
+  
+  // Exemple : Définir un courant de 0.5A pour la bobine 1
+  bobine.setCoilCurrent(1, 0.5);
+  //delay(1000); // Attendre une seconde
+}
+ */
