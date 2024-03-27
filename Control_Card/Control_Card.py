@@ -116,7 +116,7 @@ camera = picamera2.Picamera2()
 # camera.resolution=(WIDTH, HEIGHT)
 camera.configure(camera.create_preview_configuration(main={"format": 'XRGB8888', "size": (WIDTH, HEIGHT)}))
 # camera.resolution = (2592, 1944)
-camera.framerate = 15
+# camera.framerate = 15
 camera.start()
 # cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
 # cv2.resizeWindow("Camera", 1400, 800)

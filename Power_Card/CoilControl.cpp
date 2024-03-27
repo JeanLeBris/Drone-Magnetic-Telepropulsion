@@ -1,4 +1,5 @@
 #include "CoilControl.h"
+#include "Constants.h"
 #include <driver/ledc.h>
 
 CoilControl::CoilControl() {}
