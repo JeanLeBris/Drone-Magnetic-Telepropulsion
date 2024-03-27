@@ -166,7 +166,7 @@ while True:
     stream = DrawOctagon(p1, p2, p3, p4, stream, show_oct)
     stream = DrawCaliber(p1, stream, show_cal)
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
-    res = TransferData(p)
+    # res = TransferData(p)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
