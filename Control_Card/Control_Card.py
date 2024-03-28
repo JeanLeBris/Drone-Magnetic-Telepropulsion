@@ -10,7 +10,7 @@ def PutInfo(elements, Xoffset, Yoffset, stream, stream2, string, show):
     if len(elements) > 0:
         c=max(elements, key=cv2.contourArea)
         ((x, y), rayon)=cv2.minEnclosingCircle(c)
-        if show and rayon>30:
+        if show and rayon>20:
             cv2.circle(stream2, (int(x + Xoffset), int(y + Yoffset)), int(rayon), color_infos, 2)
             cv2.circle(stream, (int(x + Xoffset), int(y + Yoffset)), 5, color_infos, 10)
             cv2.line(stream, (int(x + Xoffset), int(y + Yoffset)), (int(x + Xoffset)+150, int(y + Yoffset)), color_infos, 2)
@@ -91,8 +91,8 @@ def TransferData(p):
 
 lo_drone = np.array([50, 100, 0])
 hi_drone = np.array([100, 255, 255])
-lo_env = np.array([32, 100, 0])
-hi_env = np.array([64, 255, 255])
+lo_env = np.array([150, 50, 0])
+hi_env = np.array([225, 255, 255])
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
 color_infos_blue = (255, 0, 0)
@@ -113,8 +113,9 @@ pressed = False
 button_value = 0
 
 camera = picamera2.Picamera2()
+mode = camera.sensor_modes[1]
 # camera.resolution=(WIDTH, HEIGHT)
-camera.configure(camera.create_preview_configuration(main={"format": 'XRGB8888', "size": (WIDTH, HEIGHT)}))
+camera.configure(camera.create_preview_configuration(main={"format": 'XRGB8888', "size": (WIDTH, HEIGHT)}, sensor = {'output_size': mode['size'], 'bit_depth': mode['bit_depth']}))
 # camera.resolution = (2592, 1944)
 # camera.framerate = 15
 camera.start()
