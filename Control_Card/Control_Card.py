@@ -89,15 +89,15 @@ def TransferData(p):
     print(string1)
     data.close()
 
-lo_drone = np.array([150, 100, 0])
-hi_drone = np.array([255, 255, 255])
-lo_env = np.array([30, 100, 0])
-hi_env = np.array([100, 255, 255])
+lo_drone = np.array([50, 100, 0])
+hi_drone = np.array([100, 255, 255])
+lo_env = np.array([32, 100, 0])
+hi_env = np.array([64, 255, 255])
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
 color_infos_blue = (255, 0, 0)
 WIDTH = 640
-HEIGHT = 640
+HEIGHT = 480
 
 pilot_mode = -1
 
@@ -134,7 +134,9 @@ while True:
     stream = camera.capture_array()
     # camera.capture(stream, 'bgr', use_video_port=True)
     # stream = cv2.flip(stream, 0)
-    stream = cv2.flip(stream, 1)
+    # stream = cv2.flip(stream, 1)
+    stream = cv2.flip(stream, -1)
+
 
     image=cv2.cvtColor(stream, cv2.COLOR_BGR2HSV)   # convert stream from bgr to hsv, store in image
     mask=cv2.inRange(image, lo_drone, hi_drone) # Verify which pixels of image are in range of lo and hi, store in mask
