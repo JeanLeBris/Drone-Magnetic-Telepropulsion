@@ -5,42 +5,41 @@ from math import sqrt
 import time
 import serial as ser
 
-# def PutInfo(elements, Xoffset, Yoffset, stream, stream2, string, show):
-#     (x, y) = (stream.shape[1]//4, stream.shape[0]//4)
-#     if len(elements) > 0:
-#         c=max(elements, key=cv2.contourArea)
-#         ((x, y), rayon)=cv2.minEnclosingCircle(c)
-#         if show and rayon>20:
-#             cv2.circle(stream2, (int(x + Xoffset), int(y + Yoffset)), int(rayon), color_infos, 2)
-#             cv2.circle(stream, (int(x + Xoffset), int(y + Yoffset)), 5, color_infos, 10)
-#             cv2.line(stream, (int(x + Xoffset), int(y + Yoffset)), (int(x + Xoffset)+150, int(y + Yoffset)), color_infos, 2)
-#             cv2.putText(stream, string, (int(x + Xoffset)+10, int(y + Yoffset) -10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1, cv2.LINE_AA)
-#     return (stream, stream2, (int(x + Xoffset), int(y + Yoffset)))
-
-def GetInfo(elements, Xoffset, Yoffset, stream):
+def PutInfo(elements, Xoffset, Yoffset, stream, stream2, string, show):
     (x, y) = (stream.shape[1]//4, stream.shape[0]//4)
     if len(elements) > 0:
         c=max(elements, key=cv2.contourArea)
         ((x, y), rayon)=cv2.minEnclosingCircle(c)
-    return ((int(x + Xoffset), int(y + Yoffset)), rayon)
+        if show and rayon>20:
+            cv2.circle(stream2, (int(x + Xoffset), int(y + Yoffset)), int(rayon), color_infos, 2)
+            cv2.circle(stream, (int(x + Xoffset), int(y + Yoffset)), 5, color_infos, 10)
+            cv2.line(stream, (int(x + Xoffset), int(y + Yoffset)), (int(x + Xoffset)+150, int(y + Yoffset)), color_infos, 2)
+            cv2.putText(stream, string, (int(x + Xoffset)+10, int(y + Yoffset) -10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1, cv2.LINE_AA)
+    return (stream, stream2, (int(x + Xoffset), int(y + Yoffset)))
 
-def ShowInfo(p, rayon, stream, stream2, string):
-    if rayon>20:
-        cv2.circle(stream2, p, int(rayon), color_infos, 2)
-        cv2.circle(stream, p, 5, color_infos, 10)
-        cv2.line(stream, p, (p[0] + 150, p[1]), color_infos, 2)
-        cv2.putText(stream, string, (p[0] + 10, p[1] - 10), cv2.FONT_HERSHEY_DUPLEX, 1, color_infos, 1, cv2.LINE_AA)
-    return (stream, stream2)
-
-def DrawEnvironment(p1, p2, p3, p4, stream):
-    cv2.line(stream, p1, p2, color_infos, 2)
-    cv2.line(stream, p1, p3, color_infos, 2)
-    cv2.line(stream, p4, p2, color_infos, 2)
-    cv2.line(stream, p4, p3, color_infos, 2)
+def DrawEnvironment(p1, p2, p3, p4, stream, show):
+    if show:
+        cv2.line(stream, p1, p2, color_infos, 2)
+        cv2.line(stream, p1, p3, color_infos, 2)
+        cv2.line(stream, p4, p2, color_infos, 2)
+        cv2.line(stream, p4, p3, color_infos, 2)
+        # print("(x1 , y1) = ({} , {}) ; (x2 , y2) = ({} , {}) ; (x3 , y3) = ({} , {}) ; (x4) , y4) = ({} , {})".format(x1, y1, x2, y2, x3, y3, x4, y4))
     return stream
 
 def DrawOctagon(p1, p2, p3, p4, stream, show):
     if show:
+        # c12 = ((x1 + x2) / 2, (y1 + y2) / 2)
+        # c13 = ((x1 + x3) / 2, (y1 + y3) / 2)
+        # c24 = ((x2 + x4) / 2, (y2 + y4) / 2)
+        # c34 = ((x3 + x4) / 2, (y3 + y4) / 2)
+        # r12and34 = sqrt((c34[0] - c12[0]) ** 2 + (c34[1] - c12[1]) ** 2) / 2
+        # r13and24 = sqrt((c13[0] - c24[0]) ** 2 + (c13[1] - c24[1]) ** 2) / 2
+        # a12and34 = r13and24 * 2 / (1 + sqrt(2))
+        # a13and24 = r12and34 * 2 / (1 + sqrt(2))
+        # b12 = (sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) - a12and34) / 2
+        # b13 = (sqrt((x1 - x3) ** 2 + (y1 - y3) ** 2) - a13and24) / 2
+        # b24 = (sqrt((x2 - x4) ** 2 + (y2 - y4) ** 2) - a13and24) / 2
+        # b34 = (sqrt((x3 - x4) ** 2 + (y3 - y4) ** 2) - a12and34) / 2
         b1 = 0.2928932188
         b2 = 0.7071067812
         p121 = (int(p1[0] + b1 * (p2[0] - p1[0])), int(p1[1] + b1 * (p2[1] - p1[1])))
@@ -59,6 +58,7 @@ def DrawOctagon(p1, p2, p3, p4, stream, show):
         cv2.line(stream, p432, p132, color_infos_red, 2)
         cv2.line(stream, p132, p131, color_infos_red, 2)
         cv2.line(stream, p131, p121, color_infos_red, 2)
+        # print("(x1 , y1) = ({} , {}) ; (x2 , y2) = ({} , {}) ; (x3 , y3) = ({} , {}) ; (x4) , y4) = ({} , {})".format(x1, y1, x2, y2, x3, y3, x4, y4))
     return stream
 
 def DrawCaliber(p1, stream, show):
@@ -80,7 +80,7 @@ def GetCoord(p1, v_dist, h_dist, p_obj):
         y = 1000
     return (x, y)
 
-def TransferCoordinatesData(p):
+def TransferData(p):
     print("{}:{}".format(p[0], p[1]))
     data = ser.Serial("/dev/ttyS0",115200,timeout=2)
     data.flush()
@@ -88,21 +88,6 @@ def TransferCoordinatesData(p):
     string1 = data.readline().decode("utf-8")
     print(string1)
     data.close()
-
-def TransferPowerData(auto_control, power):
-    if auto_control:
-        # if in auto mode
-        data = ser.Serial("/dev/ttyS0",115200,timeout=2)
-        # data.flush()
-        data.write("1:{}:{}:{}:{}:{}:{}:{}:{}\0".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]).encode())
-        # data.write("1:{}:{}:{}:{}:{}:{}:{}:{}\0".format(power).encode())
-        data.close()
-    else:
-        # if in manual mode
-        data = ser.Serial("/dev/ttyS0",115200,timeout=2)
-        # data.flush()
-        data.write("0\0".encode())
-        data.close()
 
 lo_drone = np.array([50, 100, 0])
 hi_drone = np.array([100, 255, 255])
@@ -114,9 +99,7 @@ color_infos_blue = (255, 0, 0)
 WIDTH = 640
 HEIGHT = 480
 
-# pilot_mode = -1
-
-power = [0, 0, 0, 0, 0, 0, 0, 0]
+pilot_mode = -1
 
 show_mask = False
 show_image2 = False
@@ -126,8 +109,6 @@ show_env = False
 show_oct = False
 show_cal = False
 show_obj = False
-calibrate_env = False
-auto_control = False
 pressed = False
 button_value = 0
 
@@ -160,7 +141,7 @@ while True:
 
     image=cv2.cvtColor(stream, cv2.COLOR_BGR2HSV)   # convert stream from bgr to hsv, store in image
     mask=cv2.inRange(image, lo_drone, hi_drone) # Verify which pixels of image are in range of lo and hi, store in mask
-    env_mask=cv2.inRange(image, lo_env, hi_env) # Verify which pixels of image are in range of lo and hi, store in env_mask
+    env_mask=cv2.inRange(image, lo_env, hi_env) # Verify which pixels of image are in range of lo and hi, store in mask
     image=cv2.blur(image, (7, 7))   # Blur image
 
     mask=cv2.erode(mask, None, iterations=4)
@@ -179,25 +160,16 @@ while True:
     env_elements3=cv2.findContours(env_mask[:env_mask.shape[0]//2, env_mask.shape[1]//2+1:], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     env_elements4=cv2.findContours(env_mask[env_mask.shape[0]//2+1:, env_mask.shape[1]//2+1:], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
 
-    (p_obj, r_obj) = GetInfo(elements, 0, 0, stream)
-    if show_obj:
-        (stream, image2) = ShowInfo(p_obj, r_obj, stream, image2, "Object")
-    if calibrate_env:
-        (p1, r1) = GetInfo(env_elements1, 0, 0, stream)
-        (p2, r2) = GetInfo(env_elements2, 0, env_mask.shape[0]//2+1, stream)
-        (p3, r3) = GetInfo(env_elements3, env_mask.shape[1]//2+1, 0, stream)
-        (p4, r4) = GetInfo(env_elements4, env_mask.shape[1]//2+1, env_mask.shape[0]//2+1, stream)
-    if show_env:
-        (stream, env_image2) = ShowInfo(p1, r1, stream, env_image2, "Env_1")
-        (stream, env_image2) = ShowInfo(p2, r2, stream, env_image2, "Env_2")
-        (stream, env_image2) = ShowInfo(p3, r3, stream, env_image2, "Env_3")
-        (stream, env_image2) = ShowInfo(p4, r4, stream, env_image2, "Env_4")
-        stream = DrawEnvironment(p1, p2, p3, p4, stream)
+    (stream, image2, p_obj) = PutInfo(elements, 0, 0, stream, image2, "Object", show_obj)
+    (stream, env_image2, p1) = PutInfo(env_elements1, 0, 0, stream, env_image2, "Env_1", show_env)
+    (stream, env_image2, p2) = PutInfo(env_elements2, 0, env_mask.shape[0]//2+1, stream, env_image2, "Env_2", show_env)
+    (stream, env_image2, p3) = PutInfo(env_elements3, env_mask.shape[1]//2+1, 0, stream, env_image2, "Env_3", show_env)
+    (stream, env_image2, p4) = PutInfo(env_elements4, env_mask.shape[1]//2+1, env_mask.shape[0]//2+1, stream, env_image2, "Env_4", show_env)
+    stream = DrawEnvironment(p1, p2, p3, p4, stream, show_env)
     stream = DrawOctagon(p1, p2, p3, p4, stream, show_oct)
     stream = DrawCaliber(p1, stream, show_cal)
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
-    # TransferCoordinatesData(p)
-    TransferPowerData(auto_control, power)
+    # res = TransferData(p)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
@@ -250,11 +222,6 @@ while True:
     elif button_value==ord('o') and pressed == False:
         show_obj = not(show_obj)
         pressed = True
-    elif button_value==ord('f') and pressed == False:
-        calibrate_env = not(calibrate_env)
-        pressed = True
-    elif button_value==ord('a') and pressed == False:
-        auto_control = not(auto_control)
-        pressed = True
-
+    # stream.seek(0)
+    # stream.truncate()
 cv2.destroyAllWindows()
