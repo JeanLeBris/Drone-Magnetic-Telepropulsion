@@ -19,6 +19,7 @@ import serial as ser
 
 def GetInfo(elements, Xoffset, Yoffset, stream):
     (x, y) = (stream.shape[1]//4, stream.shape[0]//4)
+    rayon = 0
     if len(elements) > 0:
         c=max(elements, key=cv2.contourArea)
         ((x, y), rayon)=cv2.minEnclosingCircle(c)
@@ -81,13 +82,15 @@ def GetCoord(p1, v_dist, h_dist, p_obj):
     return (x, y)
 
 def TransferCoordinatesData(p):
-    print("{}:{}".format(p[0], p[1]))
     data = ser.Serial("/dev/ttyS0",115200,timeout=2)
     data.flush()
     data.write("{}:{}\0".format(p[0], p[1]).encode())
     string1 = data.readline().decode("utf-8")
     print(string1)
     data.close()
+
+def PrintCoordinatesData(p):
+    print("{}:{}".format(p[0], p[1]))
 
 def TransferPowerData(auto_control, power):
     if auto_control:
@@ -126,7 +129,7 @@ show_env = False
 show_oct = False
 show_cal = False
 show_obj = False
-calibrate_env = False
+calibrate_env = True
 auto_control = False
 pressed = False
 button_value = 0
@@ -197,7 +200,8 @@ while True:
     stream = DrawCaliber(p1, stream, show_cal)
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
     # TransferCoordinatesData(p)
-    TransferPowerData(auto_control, power)
+    # TransferPowerData(auto_control, power)
+    PrintCoordinatesData(p)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
