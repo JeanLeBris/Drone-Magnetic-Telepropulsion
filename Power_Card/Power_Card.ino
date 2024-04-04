@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include "CoilControl.h"
-#include "Drone.h"
 #include "Joystick.h"
+#include "Coil.h"
+#include "System.h"
 #include "Constants.h"
 
 
@@ -29,7 +29,11 @@
 
 
 
-CoilControl bobine;
+// CoilControl bobine;
+
+// Drone drone;
+
+System system1;
 
 String data = "\0";
 char data_rcvd = 0;
@@ -45,45 +49,21 @@ void setup() {
   // digitalWrite(13, LOW);    // switch off LED pin
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, RX2, TX2);       // initialize UART with baud rate of 9600 bps
-  bobine.begin(); // initialize coil
+  system1.begin(); // initialize system
 }
 
 void loop() {
-  /*
   if(Serial2.available()) {
-    // data_rcvd = 0;
-    // count = 0;
-    // while(data_rcvd != '\0'){
-      // Serial.flush();
-      data = Serial2.readStringUntil('\0');   // read one byte from serial buffer and save to data_rcvd
-
-      // if(data_rcvd == '1') digitalWrite(13, HIGH);  // switch LED On
-      // if(data_rcvd == '0') digitalWrite(13, LOW);   // switch LED Off
-
-      // if(data_rcvd == '\0'){
-      //   data_rcvd = '\n';
-      // }
-      Serial.println(data);
-      // delay(100);
-
-      delimiter_index = data.indexOf(':');
-      x_obj = data.substring(0, delimiter_index).toInt();
-      y_obj = data.substring(delimiter_index + 1, data.length()).toInt();
-      Serial.print(x_obj);
-      Serial.print("-");
-      Serial.println(y_obj);
-
-      Serial2.println(data);
-
-    //   data[count] = data_rcvd;
-    //   count++;
-    // }
-    // Serial.println(data);
-    // Serial.println("skip");
+    system1.updateData();
+    system1.printPower();
+    if(system1.control_mode){
+      // auto mode
+    }
+    else{
+      // manual mode
+      system1.joystick.updateJoystick();
+    }
   }
-  // Serial.println("Hello World!");
-  */
-  Drone.getPosition();
 }
 
 

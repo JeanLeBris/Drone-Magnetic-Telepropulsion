@@ -1,13 +1,21 @@
-#ifndef COILCONTROL_H
-#define COILCONTROL_H
+#ifndef COIL_H
+#define COIL_H
 
 #include <Arduino.h>
 #include "Constants.h"
 
-class Drone {
+class Coil {
   public:
-    Drone();
-    void getPosition();
+    Coil();
+    void begin();
+    void setCoilCurrent(int coilNumber, float current);
+
+    int PWM_pin;
+    int dir_pin;
+    const float resistance = 2.84;
+
+    int power;
+    int direction;
     
   private:
     // const int pwmPins[8] = {2, 4, 5, 12, 13, 14, 15, 16}; // Broches PWM pour les bobines
