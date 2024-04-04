@@ -97,8 +97,8 @@ def TransferPowerData(auto_control, power):
         # if in auto mode
         data = ser.Serial("/dev/ttyS0",115200,timeout=2)
         # data.flush()
-        data.write("1:{}:{}:{}:{}:{}:{}:{}:{}\0".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]).encode())
-        # data.write("1:{}:{}:{}:{}:{}:{}:{}:{}\0".format(power).encode())
+        data.write("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}\0".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]).encode())
+        # data.write("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}\0".format(power).encode())
         data.close()
     else:
         # if in manual mode
@@ -107,9 +107,16 @@ def TransferPowerData(auto_control, power):
         data.write("0\0".encode())
         data.close()
 
-lo_drone = np.array([50, 100, 0])
-hi_drone = np.array([100, 255, 255])
-lo_env = np.array([150, 50, 0])
+def PrintPowerData(auto_control, power):
+    if auto_control:
+        print("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]))
+        # print("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}".format(power))
+    else:
+        print("0")
+
+lo_drone = np.array([100, 220, 125])
+hi_drone = np.array([125, 255, 255])
+lo_env = np.array([150, 100, 100])
 hi_env = np.array([225, 255, 255])
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
@@ -119,7 +126,7 @@ HEIGHT = 480
 
 # pilot_mode = -1
 
-power = [0, 0, 0, 0, 0, 0, 0, 0]
+power = [0, 1000, 0, 0, 999, 0, 0, 0]
 
 show_mask = False
 show_image2 = False
@@ -199,9 +206,10 @@ while True:
     stream = DrawOctagon(p1, p2, p3, p4, stream, show_oct)
     stream = DrawCaliber(p1, stream, show_cal)
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
+    # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
-    # TransferPowerData(auto_control, power)
-    PrintCoordinatesData(p)
+    PrintPowerData(auto_control, power)
+    TransferPowerData(auto_control, power)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
