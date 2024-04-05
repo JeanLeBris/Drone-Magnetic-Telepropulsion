@@ -97,7 +97,7 @@ def TransferPowerData(auto_control, power):
         # if in auto mode
         data = ser.Serial("/dev/ttyS0",115200,timeout=2)
         # data.flush()
-        data.write("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}\0".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]).encode())
+        data.write("1:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}\0".format(direction[0], power[0], direction[1], power[1], direction[2], power[2], direction[3], power[3], direction[4], power[4], direction[5], power[5], direction[6], power[6], direction[7], power[7]).encode())
         # data.write("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}\0".format(power).encode())
         data.close()
     else:
@@ -109,7 +109,7 @@ def TransferPowerData(auto_control, power):
 
 def PrintPowerData(auto_control, power):
     if auto_control:
-        print("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]))
+        print("1:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]))
         # print("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}".format(power))
     else:
         print("0")
@@ -126,7 +126,8 @@ HEIGHT = 480
 
 # pilot_mode = -1
 
-power = [0, 1000, 0, 0, 999, 0, 0, 0]
+direction = [0, 1, 0, 0, 0, 1, 0, 0]
+power = [0, 100, 0, 0, 999, 0, 0, 0]
 
 show_mask = False
 show_image2 = False
@@ -209,7 +210,7 @@ while True:
     # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
     PrintPowerData(auto_control, power)
-    TransferPowerData(auto_control, power)
+    # TransferPowerData(auto_control, power)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
