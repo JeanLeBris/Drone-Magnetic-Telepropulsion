@@ -12,7 +12,9 @@ class System {
     void begin();
     // void getPosition();
     void updateData();
+    void updatePowerFromJoystick();
     void printPower();
+    void updateCoils();
 
     Coil coils[8];
     Joystick joystick;

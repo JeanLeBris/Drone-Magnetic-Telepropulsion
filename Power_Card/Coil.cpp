@@ -1,5 +1,6 @@
 #include "Coil.h"
 #include "Constants.h"
+#include <Arduino.h>
 #include <driver/ledc.h>
 
 Coil::Coil() {}
@@ -31,4 +32,16 @@ void Coil::setCoilCurrent(int coilNumber, float current) {
 
     ledcWrite(coilNumber, dutyCycle);
   }
+}
+
+void Coil::updateCoil(){
+  int dutyCycle = (int) ((this->power * 4095) / 999);
+  if(dutyCycle > 4095) dutyCycle = 4095; // Limiter à la valeur maximale a 255
+  if(this->direction){
+    digitalWrite(this->dir_pin, HIGH);
+  }
+  else{
+    digitalWrite(this->dir_pin, LOW);
+  }
+  ledcWrite(this->coil_number, dutyCycle);
 }

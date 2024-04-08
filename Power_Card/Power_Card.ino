@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <cstdlib>
 #include "Joystick.h"
 #include "Coil.h"
 #include "System.h"
@@ -53,17 +54,39 @@ void setup() {
 }
 
 void loop() {
-  if(Serial2.available()) {
-    system1.updateData();
-    system1.printPower();
+  // if(Serial2.available()) {
+    // system1.updateData();
+    system1.control_mode = 0;
     if(system1.control_mode){
       // auto mode
     }
     else{
       // manual mode
       system1.joystick.updateJoystick();
+      system1.updatePowerFromJoystick();
     }
-  }
+    system1.printPower();
+    system1.updateCoils();
+  // }
+
+  // for(int i = 0; i < 999; i++){
+  //   system1.coils[0].power = i;
+  //   system1.coils[0].direction = 0;
+  //   system1.coils[0].updateCoil();
+  //   Serial.print(system1.coils[0].power);
+  //   Serial.print(" - ");
+  //   Serial.println(system1.coils[0].direction);
+  //   delay(5);
+  // }
+  // for(int i = 999; i > 0; i--){
+  //   system1.coils[0].power = i;
+  //   system1.coils[0].direction = 1;
+  //   system1.coils[0].updateCoil();
+  //   Serial.print(system1.coils[0].power);
+  //   Serial.print(" - ");
+  //   Serial.println(system1.coils[0].direction);
+  //   delay(5);
+  // }
 }
 
 

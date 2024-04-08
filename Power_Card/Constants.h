@@ -13,6 +13,7 @@ const int PWM_pins[8] = {PWM_0, PWM_1, PWM_2, PWM_3, PWM_4, PWM_5, PWM_6, PWM_7}
 
 #define DIR_0 15
 #define DIR_1 2
+
 #define DIR_2 0
 #define DIR_3 4
 #define DIR_4 5

@@ -9,9 +9,11 @@ class Coil {
     Coil();
     void begin();
     void setCoilCurrent(int coilNumber, float current);
+    void updateCoil();
 
     int PWM_pin;
     int dir_pin;
+    int coil_number;
     const float resistance = 2.84;
 
     int power;

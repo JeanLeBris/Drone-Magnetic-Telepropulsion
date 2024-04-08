@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "System.h"
 #include "Coil.h"
 #include "Constants.h"
@@ -22,6 +23,7 @@ void System::begin() {
     pinMode(this->coils[i].dir_pin, OUTPUT);
     ledcSetup(i, 10000, 12); // Fréquence de 10 kHz, résolution de 12 bits
     ledcAttachPin(this->coils[i].PWM_pin, i);
+    this->coils[i].coil_number = i;
   }
 
   // this->joystick.minX = 1700;
@@ -83,31 +85,67 @@ void System::updateData() {
   else{
     this->control_mode = 1;
 
-    this->coils[0].power = data.substring(2, 6).toInt();
-    this->coils[1].power = data.substring(7, 11).toInt();
-    this->coils[2].power = data.substring(12, 16).toInt();
-    this->coils[3].power = data.substring(17, 21).toInt();
-    this->coils[4].power = data.substring(22, 26).toInt();
-    this->coils[5].power = data.substring(27, 31).toInt();
-    this->coils[6].power = data.substring(32, 36).toInt();
-    this->coils[7].power = data.substring(37, 41).toInt();
+    this->coils[0].direction = data[2] - 48;
+    this->coils[0].power = data.substring(3, 6).toInt();
+    this->coils[1].direction = data[7] - 48;
+    this->coils[1].power = data.substring(8, 11).toInt();
+    this->coils[2].direction = data[12] - 48;
+    this->coils[2].power = data.substring(13, 16).toInt();
+    this->coils[3].direction = data[17] - 48;
+    this->coils[3].power = data.substring(18, 21).toInt();
+    this->coils[4].direction = data[22] - 48;
+    this->coils[4].power = data.substring(23, 26).toInt();
+    this->coils[5].direction = data[27] - 48;
+    this->coils[5].power = data.substring(28, 31).toInt();
+    this->coils[6].direction = data[32] - 48;
+    this->coils[6].power = data.substring(33, 36).toInt();
+    this->coils[7].direction = data[37] - 48;
+    this->coils[7].power = data.substring(38, 41).toInt();
   }
 }
 
+void System::updatePowerFromJoystick(){
+  int x = this->joystick.x;
+  int y = this->joystick.y;
+
+  if(x < 0){
+    this->coils[0].direction = 0;
+  }
+  else{
+    this->coils[0].direction = 1;
+  }
+
+  this->coils[0].power = abs(x)*10;
+}
+
 void System::printPower() {
+  Serial.print(this->coils[0].direction);
   Serial.print(this->coils[0].power);
   Serial.print("-");
+  Serial.print(this->coils[1].direction);
   Serial.print(this->coils[1].power);
   Serial.print("-");
+  Serial.print(this->coils[2].direction);
   Serial.print(this->coils[2].power);
   Serial.print("-");
+  Serial.print(this->coils[3].direction);
   Serial.print(this->coils[3].power);
   Serial.print("-");
+  Serial.print(this->coils[4].direction);
   Serial.print(this->coils[4].power);
   Serial.print("-");
+  Serial.print(this->coils[5].direction);
   Serial.print(this->coils[5].power);
   Serial.print("-");
+  Serial.print(this->coils[6].direction);
   Serial.print(this->coils[6].power);
   Serial.print("-");
+  Serial.print(this->coils[7].direction);
   Serial.println(this->coils[7].power);
+}
+
+void System::updateCoils() {
+  for(int i = 0; i < 8; i++){
+    this->coils[i].updateCoil();
+  }
 }
