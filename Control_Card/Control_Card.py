@@ -210,7 +210,7 @@ while True:
     # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
     PrintPowerData(auto_control, power)
-    # TransferPowerData(auto_control, power)
+    TransferPowerData(auto_control, power)
     time.sleep(0.01)
 
     cv2.imshow('Camera', stream)
