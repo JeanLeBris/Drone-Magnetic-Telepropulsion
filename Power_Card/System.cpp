@@ -1,4 +1,6 @@
+#include <Arduino.h>
 #include <cstdlib>
+#include <BluetoothSerial.h>
 #include "System.h"
 #include "Coil.h"
 #include "Constants.h"
@@ -16,22 +18,20 @@ void System::begin() {
   
   // Initialisation des broches en mode de sortie
 
-  for(int i = 0; i < 8; i++){
-    this->coils[i].PWM_pin = PWM_pins[i];
-    this->coils[i].dir_pin = dir_pins[i];
-    pinMode(this->coils[i].PWM_pin, OUTPUT);
-    pinMode(this->coils[i].dir_pin, OUTPUT);
-    ledcSetup(i, 10000, 12); // Fréquence de 10 kHz, résolution de 12 bits
-    ledcAttachPin(this->coils[i].PWM_pin, i);
-    this->coils[i].coil_number = i;
-  }
+  // delay(2000);
 
-  // this->joystick.minX = 1700;
-  // this->joystick.maxX = 2000;
-  // this->joystick.minY = 1700;
-  // this->joystick.maxY = 2000;
-  // this->joystick.centerX = 1000;
-  // this->joystick.centerY = 1000;
+  this->joystick.begin();
+
+  for(int i = 0; i < 8; i++){
+    // this->coils[i].PWM_pin = PWM_pins[i];
+    // this->coils[i].dir_pin = dir_pins[i];
+    // pinMode(this->coils[i].PWM_pin, OUTPUT);
+    // pinMode(this->coils[i].dir_pin, OUTPUT);
+    // ledcSetup(i, 10000, 12); // Fréquence de 10 kHz, résolution de 12 bits
+    // ledcAttachPin(this->coils[i].PWM_pin, i);
+    // this->coils[i].coil_number = i;
+    this->coils[i].begin(i);
+  }
 }
 
 /*
@@ -104,18 +104,78 @@ void System::updateData() {
   }
 }
 
-void System::updatePowerFromJoystick(){
+void System::updatePowerFromJoystickTest(int num){
   int x = this->joystick.x;
   int y = this->joystick.y;
 
-  if(x < 0){
-    this->coils[0].direction = 0;
+  if(this->coils[num].direction && x < -5){
+    this->coils[num].direction = 0;
   }
-  else{
-    this->coils[0].direction = 1;
+  else if(!this->coils[num].direction && x > 5){
+    this->coils[num].direction = 1;
   }
 
-  this->coils[0].power = abs(x)*10;
+  this->coils[num].target_power = abs(x)*10;
+}
+
+void System::updatePowerFromJoystick(){
+  int x = this->joystick.x;
+  int y = this->joystick.y;
+  int dist = (int) sqrt(pow(x, 2) + pow(y, 2));
+  int cos6 = (int) dist * cos(PI / 6);
+  int cos3 = (int) dist * cos(PI / 3);
+
+  this->coils[0].target_power = 0;
+  this->coils[1].target_power = 0;
+  this->coils[2].target_power = 0;
+  this->coils[3].target_power = 0;
+  this->coils[4].target_power = 0;
+  this->coils[5].target_power = 0;
+  this->coils[6].target_power = 0;
+  this->coils[7].target_power = 0;
+
+  if(dist > 7){
+    if(x > cos6){
+      this->coils[0].direction = 1;
+      this->coils[0].target_power = dist * 10;
+      this->remanence(0);
+    }
+    else if(x < -cos6){
+      this->coils[4].direction = 1;
+      this->coils[4].target_power = dist * 10;
+      this->remanence(4);
+    }
+    else if(y > cos6){
+      this->coils[2].direction = 1;
+      this->coils[2].target_power = dist * 10;
+      this->remanence(2);
+    }
+    else if(y < -cos6){
+      this->coils[6].direction = 1;
+      this->coils[6].target_power = dist * 10;
+      this->remanence(6);
+    }
+    else if(x > cos3 && y > cos3){
+      this->coils[1].direction = 1;
+      this->coils[1].target_power = dist * 10;
+      this->remanence(1);
+    }
+    else if(x < -cos3 && y > cos3){
+      this->coils[3].direction = 1;
+      this->coils[3].target_power = dist * 10;
+      this->remanence(3);
+    }
+    else if(x < -cos3 && y < -cos3){
+      this->coils[5].direction = 1;
+      this->coils[5].target_power = dist * 10;
+      this->remanence(5);
+    }
+    else if(x > cos3 && y < -cos3){
+      this->coils[7].direction = 1;
+      this->coils[7].target_power = dist * 10;
+      this->remanence(7);
+    }
+  }
 }
 
 void System::printPower() {
@@ -145,7 +205,26 @@ void System::printPower() {
 }
 
 void System::updateCoils() {
+  float total_current = 0;
   for(int i = 0; i < 8; i++){
-    this->coils[i].updateCoil();
+    total_current += ((abs(this->coils[i].target_power) * 24) / 999) / this->coils[i].resistance;
   }
+  Serial.println(total_current);
+  if(total_current < 30){
+    for(int i = 0; i < 8; i++){
+      this->coils[i].updateCoil();
+    }
+  }
+  else{
+    Serial.println("Threshold");
+  }
+}
+
+void System::remanence(int coil_number){
+  // for(int i = 0; i < 8; i++){
+  //   if(i != coil_number){
+  //     this->coils[i].direction = 0;
+  //     this->coils[i].target_power = 50;
+  //   }
+  // }
 }

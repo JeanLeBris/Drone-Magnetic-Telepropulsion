@@ -12,9 +12,11 @@ class System {
     void begin();
     // void getPosition();
     void updateData();
+    void updatePowerFromJoystickTest(int num);
     void updatePowerFromJoystick();
     void printPower();
     void updateCoils();
+    void remanence(int coil_number);
 
     Coil coils[8];
     Joystick joystick;

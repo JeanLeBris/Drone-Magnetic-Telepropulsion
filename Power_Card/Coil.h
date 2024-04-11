@@ -7,7 +7,7 @@
 class Coil {
   public:
     Coil();
-    void begin();
+    void begin(int i);
     void setCoilCurrent(int coilNumber, float current);
     void updateCoil();
 
@@ -17,6 +17,7 @@ class Coil {
     const float resistance = 2.84;
 
     int power;
+    int target_power;
     int direction;
     
   private:
