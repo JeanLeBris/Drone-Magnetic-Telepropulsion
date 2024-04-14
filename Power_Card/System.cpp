@@ -5,6 +5,10 @@
 #include "Coil.h"
 #include "Constants.h"
 
+
+#define NUM_COILS 8
+
+
 System::System() {}
 
 void System::begin() {
@@ -15,112 +19,91 @@ void System::begin() {
 	
 	Pour F_PWM = 10KHz Resolution Max = 12 bits
   */
-  
-  // Initialisation des broches en mode de sortie
-
-  // delay(2000);
-
   this->joystick.begin();
-
+  
   for(int i = 0; i < 8; i++){
-    // this->coils[i].PWM_pin = PWM_pins[i];
-    // this->coils[i].dir_pin = dir_pins[i];
-    // pinMode(this->coils[i].PWM_pin, OUTPUT);
-    // pinMode(this->coils[i].dir_pin, OUTPUT);
-    // ledcSetup(i, 10000, 12); // Fréquence de 10 kHz, résolution de 12 bits
-    // ledcAttachPin(this->coils[i].PWM_pin, i);
-    // this->coils[i].coil_number = i;
     this->coils[i].begin(i);
   }
 }
 
-/*
-void Drone::getPosition() {
-  String data = "\0";
-  int delimiter_index = 0;
-  int x_obj = 0;
-  int y_obj = 0;
-  if(Serial2.available()) {
-    // data_rcvd = 0;
-    // count = 0;
-    // while(data_rcvd != '\0'){
-      // Serial.flush();
-      data = Serial2.readStringUntil('\0');   // read one byte from serial buffer and save to data_rcvd
 
-      // if(data_rcvd == '1') digitalWrite(13, HIGH);  // switch LED On
-      // if(data_rcvd == '0') digitalWrite(13, LOW);   // switch LED Off
-
-      // if(data_rcvd == '\0'){
-      //   data_rcvd = '\n';
-      // }
-      Serial.println(data);
-      // delay(100);
-
-      delimiter_index = data.indexOf(':');
-      x_obj = data.substring(0, delimiter_index).toInt();
-      y_obj = data.substring(delimiter_index + 1, data.length()).toInt();
-      Serial.print(x_obj);
-      Serial.print("-");
-      Serial.println(y_obj);
-
-      Serial2.println(data);
-
-    //   data[count] = data_rcvd;
-    //   count++;
-    // }
-    // Serial.println(data);
-    // Serial.println("skip");
-  }
-  // Serial.println("Hello World!");
-}
-*/
-
-void System::updateData() {
-  String data;
-  data = Serial2.readStringUntil('\0');
-  Serial.println(data);
-  if(data[0] == '0'){
-    this->control_mode = 0;
-  }
-  else{
-    this->control_mode = 1;
-
-    this->coils[0].direction = data[2] - 48;
-    this->coils[0].power = data.substring(3, 6).toInt();
-    this->coils[1].direction = data[7] - 48;
-    this->coils[1].power = data.substring(8, 11).toInt();
-    this->coils[2].direction = data[12] - 48;
-    this->coils[2].power = data.substring(13, 16).toInt();
-    this->coils[3].direction = data[17] - 48;
-    this->coils[3].power = data.substring(18, 21).toInt();
-    this->coils[4].direction = data[22] - 48;
-    this->coils[4].power = data.substring(23, 26).toInt();
-    this->coils[5].direction = data[27] - 48;
-    this->coils[5].power = data.substring(28, 31).toInt();
-    this->coils[6].direction = data[32] - 48;
-    this->coils[6].power = data.substring(33, 36).toInt();
-    this->coils[7].direction = data[37] - 48;
-    this->coils[7].power = data.substring(38, 41).toInt();
-  }
-}
 
 void System::updatePowerFromJoystickTest(int num){
   int x = this->joystick.x;
   int y = this->joystick.y;
 
-  if(this->coils[num].direction && x < -5){
+  /*if(this->coils[num].direction && x < -5){
     this->coils[num].direction = 0;
   }
   else if(!this->coils[num].direction && x > 5){
     this->coils[num].direction = 1;
-  }
-
-  this->coils[num].target_power = abs(x)*10;
+  }*/
+  
+  this->coils[num].target_power = x;
 }
 
-void System::updatePowerFromJoystick(){
+
+
+void System::updatePowerFromJoystick() {
   int x = this->joystick.x;
   int y = this->joystick.y;
+
+  // Calcul de l'angle du joystick par rapport à l'axe horizontal
+  float angle = atan2(y, x);
+  if (angle < 0) {
+    angle += 2 * PI; // Ajustement pour obtenir un angle positif
+  }
+
+  // Calcul de la distance par rapport au centre du joystick
+  int dist = (int)sqrt(pow(x, 2) + pow(y, 2));
+
+  // Conversion de l'angle en position sur le cercle des 8 directions
+  int joystickDirection = round(8 * angle / (2 * PI));
+  // Si direction = 8, on le ramène à 0 pour une boucle complète
+  if (joystickDirection == NUM_COILS) {
+    joystickDirection = 0;
+  }
+
+  // Réinitialisation de la puissance cible de toutes les bobines
+  for (int i = 0; i < NUM_COILS; i++) {
+    this->coils[i].target_power = 0;
+  }
+
+  // Allumage de la bobine correspondante à la direction du joystick
+  if (joystickDirection >= 0 && joystickDirection < NUM_COILS) {
+    this->coils[joystickDirection].direction = 1;
+    this->coils[joystickDirection].target_power = dist;
+  }
+
+  // Déterminer la bobine précédente et suivante
+  int nextDirection = (joystickDirection + 1) % NUM_COILS;
+  int prevDirection = (joystickDirection - 1 + NUM_COILS) % NUM_COILS;
+
+  // Calcul de la distance en  tre le joystick et les deux directions adjacentes
+  float distToNext = abs(angle - (2 * PI * nextDirection / NUM_COILS));
+  float distToPrev = abs(angle - (2 * PI * prevDirection / NUM_COILS));
+
+  // Ajouter une marge autour des angles pour n'allumer que la LED associée
+  float margin = 0.1; // Marge en radians (environ 5.7 degrés)
+  if (distToNext < margin) {
+    float powerRatio = distToNext / margin;
+    this->coils[nextDirection].target_power = dist * powerRatio;
+  } else if (distToPrev < margin) {
+    float powerRatio = distToPrev / margin;
+    this->coils[prevDirection].target_power = dist * powerRatio;
+  }
+
+  // Appel de la fonction remanance
+  remanence(joystickDirection);
+}
+
+
+
+/*void System::updatePowerFromJoystick(){
+  int x = this->joystick.x;
+  int y = this->joystick.y;
+
+  
   int dist = (int) sqrt(pow(x, 2) + pow(y, 2));
   int cos6 = (int) dist * cos(PI / 6);
   int cos3 = (int) dist * cos(PI / 3);
@@ -176,43 +159,54 @@ void System::updatePowerFromJoystick(){
       this->remanence(7);
     }
   }
-}
+}*/
 
 void System::printPower() {
+  Serial.print("B1:(dir= ");
   Serial.print(this->coils[0].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[0].power);
-  Serial.print("-");
+  Serial.print(") B2:(dir= ");
   Serial.print(this->coils[1].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[1].power);
-  Serial.print("-");
+  Serial.print(") B3:(dir= ");
   Serial.print(this->coils[2].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[2].power);
-  Serial.print("-");
+  Serial.print(") B4:(dir= ");
   Serial.print(this->coils[3].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[3].power);
-  Serial.print("-");
+  Serial.print(") B5:(dir= ");
   Serial.print(this->coils[4].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[4].power);
-  Serial.print("-");
+  Serial.print(") B6:(dir= ");
   Serial.print(this->coils[5].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[5].power);
-  Serial.print("-");
+  Serial.print(") B7:(dir= ");
   Serial.print(this->coils[6].direction);
+  Serial.print(" pow= ");
   Serial.print(this->coils[6].power);
-  Serial.print("-");
+  Serial.print(") B8:(dir= ");
   Serial.print(this->coils[7].direction);
-  Serial.println(this->coils[7].power);
+  Serial.print(" pow= ");
+  Serial.print(this->coils[7].power);
+  Serial.println(")");
 }
 
 void System::updateCoils() {
   float total_current = 0;
   for(int i = 0; i < 8; i++){
-    total_current += ((abs(this->coils[i].target_power) * 24) / 999) / this->coils[i].resistance;
+    total_current += ((abs(this->coils[i].target_power) * 24) / 99) / this->coils[i].resistance;
   }
   Serial.println(total_current);
+  
   if(total_current < 30){
     for(int i = 0; i < 8; i++){
-      this->coils[i].updateCoil();
+      this->coils[i].setCoilPower();
     }
   }
   else{
@@ -220,11 +214,13 @@ void System::updateCoils() {
   }
 }
 
-void System::remanence(int coil_number){
-  // for(int i = 0; i < 8; i++){
-  //   if(i != coil_number){
-  //     this->coils[i].direction = 0;
-  //     this->coils[i].target_power = 50;
-  //   }
-  // }
+void System::remanence(int activeCoil) {
+  // Réduction de la puissance dans toutes les bobines qui ne sont pas actives
+  for (int i = 0; i < NUM_COILS; i++) {
+    if (i != activeCoil) {
+      // Envoyer une faible puissance dans la direction opposée
+      this->coils[i].direction = 0; // Direction opposée
+      this->coils[i].target_power = -8; // Puissance faible
+    }
+  }
 }

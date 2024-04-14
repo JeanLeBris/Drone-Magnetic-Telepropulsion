@@ -18,54 +18,51 @@ void Coil::begin(int i) {
   // Initialisation des broches en mode de sortie
   this->PWM_pin = PWM_pins[i];
   this->dir_pin = dir_pins[i];
-  pinMode(this->PWM_pin, OUTPUT);
+  //pinMode(this->PWM_pin, OUTPUT);
   pinMode(this->dir_pin, OUTPUT);
+  
   ledcSetup(i, 10000, 12); // Fréquence de 10 kHz, résolution de 12 bits
   ledcAttachPin(this->PWM_pin, i);
   this->coil_number = i;
   this->power = 0;
-  // ledcWrite(this->coil_number, 500);
-  // digitalWrite(this->dir_pin, LOW);
-  // delay(100);
-  // digitalWrite(this->dir_pin, HIGH);
-  // delay(100);
-  // ledcWrite(this->coil_number, 0);
-  this->direction = 1;
+
+  ledcWrite(this->coil_number, 0);
+
+  /*this->direction = 0;
   digitalWrite(this->dir_pin, LOW);
+  delay(1000);
+  this->direction = 1;
+  digitalWrite(this->dir_pin, HIGH);
+  delay(1000);
+  ledcWrite(this->coil_number, 0);*/
+  this->direction = 1;
+  digitalWrite(this->dir_pin, HIGH);
   this->power = 0;
   this->target_power = 0;
 }
 
-void Coil::setCoilCurrent(int coilNumber, float current) {
-  if(coilNumber >= 0 && coilNumber < 8) {
-    float voltage = current * resistance;
-    int dutyCycle = (voltage / 24) * 4095; // L'alimentation est de 24V
-
-    if(dutyCycle > 4095) dutyCycle = 4095; // Limiter à la valeur maximale a 255
-
-    ledcWrite(coilNumber, dutyCycle);
+void Coil::setCoilPower(){
+  
+  if (this->power == 0 && this->target_power != 0) {
+            //this->direction = (this->target_power > 0) ? 1 : 0;
+            delay(50);
+            
+            digitalWrite(this->dir_pin, direction);
   }
-}
-
-void Coil::updateCoil(){
-  if(this->target_power > this->power + 10){
-    this->power += 10;
+  
+  if(this->target_power > this->power){
+    this->power ++;
   }
-  else if(this->target_power < this->power -10){
-    this->power -= 10;
-  }
-  else{
-    this->power = this->target_power;
+  else if(this->target_power < this->power){
+    this->power --;
   }
 
-  int dutyCycle = (int) ((this->power * 4095) / 999);
-  if(dutyCycle > 4095) dutyCycle = 4095;  // Limiter la valeur maximale à 4095
+
+  int dutyCycle = (int) (abs((this->power * 3900)) / 99); //3900 et pas 4095 car l'ir2110 doit toujour avoir un pwm en entrer
+  
+  if(dutyCycle > 3900) dutyCycle = 3900;  // Limiter la valeur maximale à 4095
   else if(dutyCycle < 0) dutyCycle = 0;  // Limiter la valeur minimale à 0
-  if(this->direction && this->power < 10){
-    digitalWrite(this->dir_pin, LOW);
-  }
-  else if(!this->direction && this->power < 10){
-    digitalWrite(this->dir_pin, HIGH);
-  }
+  
   ledcWrite(this->coil_number, dutyCycle);
+  delayMicroseconds(100);
 }

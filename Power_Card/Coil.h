@@ -8,8 +8,7 @@ class Coil {
   public:
     Coil();
     void begin(int i);
-    void setCoilCurrent(int coilNumber, float current);
-    void updateCoil();
+    void setCoilPower();
 
     int PWM_pin;
     int dir_pin;
