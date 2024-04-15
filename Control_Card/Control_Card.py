@@ -114,15 +114,19 @@ def PrintPowerData(auto_control, power):
     else:
         print("0")
 
-lo_drone = np.array([100, 220, 125])
-hi_drone = np.array([125, 255, 255])
-lo_env = np.array([150, 100, 100])
-hi_env = np.array([225, 255, 255])
+# lo_drone = np.array([100, 220, 125])
+# hi_drone = np.array([125, 255, 255])
+lo_drone = np.array([40, 100, 0])
+hi_drone = np.array([100, 255, 255])
+lo_env = np.array([125, 200, 200])
+hi_env = np.array([175, 255, 255])
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
 color_infos_blue = (255, 0, 0)
 WIDTH = 640
 HEIGHT = 480
+
+capture_n = 0;
 
 # pilot_mode = -1
 
@@ -167,6 +171,7 @@ while True:
     # stream = cv2.flip(stream, 0)
     # stream = cv2.flip(stream, 1)
     stream = cv2.flip(stream, -1)
+    # cv2.rotate(stream, cv2.ROTATE_90_CLOCKWISE)
 
 
     image=cv2.cvtColor(stream, cv2.COLOR_BGR2HSV)   # convert stream from bgr to hsv, store in image
@@ -191,8 +196,6 @@ while True:
     env_elements4=cv2.findContours(env_mask[env_mask.shape[0]//2+1:, env_mask.shape[1]//2+1:], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
 
     (p_obj, r_obj) = GetInfo(elements, 0, 0, stream)
-    if show_obj:
-        (stream, image2) = ShowInfo(p_obj, r_obj, stream, image2, "Object")
     if calibrate_env:
         (p1, r1) = GetInfo(env_elements1, 0, 0, stream)
         (p2, r2) = GetInfo(env_elements2, 0, env_mask.shape[0]//2+1, stream)
@@ -207,6 +210,8 @@ while True:
     stream = DrawOctagon(p1, p2, p3, p4, stream, show_oct)
     stream = DrawCaliber(p1, stream, show_cal)
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
+    if show_obj:
+        (stream, image2) = ShowInfo(p_obj, r_obj, stream, image2, "x={} y={}".format(p[0], p[1]))
     # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
     PrintPowerData(auto_control, power)
@@ -268,6 +273,26 @@ while True:
         pressed = True
     elif button_value==ord('a') and pressed == False:
         auto_control = not(auto_control)
+        pressed = True
+    elif button_value==ord('7') and pressed == False:
+        capture_n = capture_n + 1
+        cv2.imwrite("img{}.jpg".format(capture_n), stream)
+        pressed = True
+    elif button_value==ord('8') and pressed == False:
+        capture_n = capture_n + 1
+        cv2.imwrite("img1m{}.jpg".format(capture_n), mask)
+        pressed = True
+    elif button_value==ord('9') and pressed == False:
+        capture_n = capture_n + 1
+        cv2.imwrite("img2m{}.jpg".format(capture_n), env_mask)
+        pressed = True
+    elif button_value==ord('3') and pressed == False:
+        capture_n = capture_n + 1
+        cv2.imwrite("img1c{}.jpg".format(capture_n), image2)
+        pressed = True
+    elif button_value==ord('6') and pressed == False:
+        capture_n = capture_n + 1
+        cv2.imwrite("img2c{}.jpg".format(capture_n), env_image2)
         pressed = True
 
 cv2.destroyAllWindows()
