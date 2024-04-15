@@ -114,6 +114,96 @@ def PrintPowerData(auto_control, power):
     else:
         print("0")
 
+def ShowMaze(stream, maze, p1, height, width):
+    stream = cv2.rectangle(stream, (p1[0] + int((maze.begin[1] * width) // maze.MAZE_SIZE), p1[1] + int((maze.begin[0] * height) // maze.MAZE_SIZE)), (p1[0] + int(((maze.begin[1] + 1) * width) // maze.MAZE_SIZE), p1[1] + int(((maze.begin[0] + 1) * height) // maze.MAZE_SIZE)), (255, 0, 0), -1)
+    stream = cv2.rectangle(stream, (p1[0] + int((maze.end[1] * width) // maze.MAZE_SIZE), p1[1] + int((maze.end[0] * height) // maze.MAZE_SIZE)), (p1[0] + int(((maze.end[1] + 1) * width) // maze.MAZE_SIZE), p1[1] + int(((maze.end[0] + 1) * height) // maze.MAZE_SIZE)), (0, 0, 255), -1)
+    for x in range(maze.maze.shape[0]):
+        for y in range(maze.maze.shape[1]):
+            if maze.maze[x, y]:
+                stream = cv2.rectangle(stream, (p1[0] + int((y * width) // maze.MAZE_SIZE), p1[1] + int((x * height) // maze.MAZE_SIZE)), (p1[0] + int(((y + 1) * width) // maze.MAZE_SIZE), p1[1] + int(((x + 1) * height) // maze.MAZE_SIZE)), (0, 0, 0), -1)
+    return stream
+
+def ShowMazePath(stream, maze, p1, height, width):
+    for x in range(maze.maze.shape[0]):
+        for y in range(maze.maze.shape[1]):
+            if maze.maze_path[x, y]:
+                stream = cv2.rectangle(stream, (p1[0] + int((y * width) // maze.MAZE_SIZE), p1[1] + int((x * height) // maze.MAZE_SIZE)), (p1[0] + int(((y + 1) * width) // maze.MAZE_SIZE), p1[1] + int(((x + 1) * height) // maze.MAZE_SIZE)), (255, 255, 255), -1)
+    return stream
+
+def mouseCallbackFunction(event, x, y, flags, param):
+    # Maze* maze = (Maze*)ptr
+    if event == cv2.EVENT_LBUTTONDOWN:
+        # print("x: {}; y: {} clicked".format(x, y))
+        p_pressed = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], (x, y))
+        # print("x: {}; y: {} clicked".format(p_pressed[0], p_pressed[1]))
+        if p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
+            y = int(p_pressed[0] // (1000 / maze.MAZE_SIZE))
+            x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
+            maze.maze[x, y] = not(maze.maze[x, y])
+            # print(maze)
+    elif event == cv2.EVENT_RBUTTONDOWN:
+        p_pressed = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], (x, y))
+        if p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
+            y = int(p_pressed[0] // (1000 / maze.MAZE_SIZE))
+            x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
+            if maze.start_end_state:
+                maze.end = (x, y)   # end
+            else:
+                maze.begin = (x, y) # begin
+            maze.start_end_state = not(maze.start_end_state)
+
+class Maze:
+    def __init__(self):
+        self.MAZE_SIZE = 10
+        self.begin = (0, 0)
+        self.end = (self.MAZE_SIZE - 1, self.MAZE_SIZE - 1)
+        self.maze = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
+        self.maze_mask = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
+        self.maze_path = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
+        self.start_end_state = False
+        self.VALUE_MAX = 65000
+
+    def SolveMaze(self):
+        self.maze_mask = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
+        count = 0
+        file = [self.end]
+        point = file[0]
+        self.maze_mask[point] = self.VALUE_MAX
+        while count < 100 and file != [] and point != self.begin:
+            point = file.pop(0)
+            if point[0] != 0 and self.maze[point[0] - 1, point[1]] == 0 and self.maze_mask[point[0] - 1, point[1]] == 0:
+                file.append((point[0] - 1, point[1]))
+                self.maze_mask[point[0] - 1, point[1]] = self.maze_mask[point] - 1
+            if point[0] != self.MAZE_SIZE - 1 and self.maze[point[0] + 1, point[1]] == 0 and self.maze_mask[point[0] + 1, point[1]] == 0:
+                file.append((point[0] + 1, point[1]))
+                self.maze_mask[point[0] + 1, point[1]] = self.maze_mask[point] - 1
+            if point[1] != 0 and self.maze[point[0], point[1] - 1] == 0 and self.maze_mask[point[0], point[1] - 1] == 0:
+                file.append((point[0], point[1] - 1))
+                self.maze_mask[point[0], point[1] - 1] = self.maze_mask[point] - 1
+            if point[1] != self.MAZE_SIZE - 1 and self.maze[point[0], point[1] + 1] == 0 and self.maze_mask[point[0], point[1] + 1] == 0:
+                file.append((point[0], point[1] + 1))
+                self.maze_mask[point[0], point[1] + 1] = self.maze_mask[point] - 1
+            count += 1
+        # print(self.maze_mask)
+        self.GetPath()
+    
+    def GetPath(self):
+        self.maze_path = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
+        point = self.begin
+        count = 0
+        while count < 100 and point != self.end:
+            if point[0] != 0 and self.maze_mask[point[0] - 1, point[1]] == self.maze_mask[point] + 1:
+                point = (point[0] - 1, point[1])
+            elif point[0] != self.MAZE_SIZE - 1 and self.maze_mask[point[0] + 1, point[1]] == self.maze_mask[point] + 1:
+                point = (point[0] + 1, point[1])
+            elif point[1] != 0 and self.maze_mask[point[0], point[1] - 1] == self.maze_mask[point] + 1:
+                point = (point[0], point[1] - 1)
+            elif point[1] != self.MAZE_SIZE - 1 and self.maze_mask[point[0], point[1] + 1] == self.maze_mask[point] + 1:
+                point = (point[0], point[1] + 1)
+            if point != self.end:
+                self.maze_path[point] = 1
+            count += 1
+
 # lo_drone = np.array([100, 220, 125])
 # hi_drone = np.array([125, 255, 255])
 lo_drone = np.array([40, 100, 0])
@@ -126,7 +216,7 @@ color_infos_blue = (255, 0, 0)
 WIDTH = 640
 HEIGHT = 480
 
-capture_n = 0;
+capture_n = 0
 
 # pilot_mode = -1
 
@@ -141,10 +231,17 @@ show_env = False
 show_oct = False
 show_cal = False
 show_obj = False
+show_maze = False
+show_path = False
 calibrate_env = True
 auto_control = False
 pressed = False
 button_value = 0
+
+# MAZE_SIZE = 10
+# start_end_state = False
+# maze = np.zeros((MAZE_SIZE, MAZE_SIZE), dtype=int)
+maze = Maze()
 
 camera = picamera2.Picamera2()
 mode = camera.sensor_modes[1]
@@ -163,6 +260,8 @@ camera.start()
 # cv2.resizeWindow("env_image2", 1400, 800)
 # cv2.namedWindow("Env_Mask", cv2.WINDOW_NORMAL)
 # cv2.resizeWindow("Env_Mask", 1400, 800)
+cv2.namedWindow('Camera', cv2.WINDOW_GUI_NORMAL)
+cv2.setMouseCallback('Camera', mouseCallbackFunction)
 while True:
     if pressed == True and button_value==255:
         pressed = False
@@ -212,9 +311,13 @@ while True:
     p = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], p_obj)
     if show_obj:
         (stream, image2) = ShowInfo(p_obj, r_obj, stream, image2, "x={} y={}".format(p[0], p[1]))
+    if show_maze:
+        stream = ShowMaze(stream, maze, p1, p2[1]-p1[1], p3[0]-p1[0])
+        if show_path:
+            stream = ShowMazePath(stream, maze, p1, p2[1]-p1[1], p3[0]-p1[0])
     # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
-    PrintPowerData(auto_control, power)
+    # PrintPowerData(auto_control, power)
     TransferPowerData(auto_control, power)
     time.sleep(0.01)
 
@@ -273,6 +376,15 @@ while True:
         pressed = True
     elif button_value==ord('a') and pressed == False:
         auto_control = not(auto_control)
+        pressed = True
+    elif button_value==ord('m') and pressed == False:
+        show_maze = not(show_maze)
+        pressed = True
+    elif button_value==ord('l') and pressed == False:
+        maze.SolveMaze()
+        pressed = True
+    elif button_value==ord('p') and pressed == False:
+        show_path = not(show_path)
         pressed = True
     elif button_value==ord('7') and pressed == False:
         capture_n = capture_n + 1
