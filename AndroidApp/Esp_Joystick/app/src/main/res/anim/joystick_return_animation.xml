@@ -1,0 +1,7 @@
+<!-- joystick_return_animation.xml -->
+<translate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromXDelta="0%"
+    android:toXDelta="50%"
+    android:fromYDelta="0%"
+    android:toYDelta="50%"
+    android:duration="500" /> <!-- Durée de l'animation en millisecondes -->

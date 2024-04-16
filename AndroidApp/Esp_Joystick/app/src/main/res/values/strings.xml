@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Esp_Joystick</string>
+    <string name="no_bt">No Bluetooth...</string>
+    <string name="bt_not_connected_error">Turn on the Bluetooth!</string>
+    <string name="try_again">Try Again</string>
+
+</resources>
