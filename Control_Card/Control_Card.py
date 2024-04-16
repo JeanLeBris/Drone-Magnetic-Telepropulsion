@@ -26,7 +26,7 @@ def GetInfo(elements, Xoffset, Yoffset, stream):
     return ((int(x + Xoffset), int(y + Yoffset)), rayon)
 
 def ShowInfo(p, rayon, stream, stream2, string):
-    if rayon>20:
+    if rayon>10:
         cv2.circle(stream2, p, int(rayon), color_infos, 2)
         cv2.circle(stream, p, 5, color_infos, 10)
         cv2.line(stream, p, (p[0] + 150, p[1]), color_infos, 2)
@@ -95,21 +95,21 @@ def PrintCoordinatesData(p):
 def TransferPowerData(auto_control, power):
     if auto_control:
         # if in auto mode
-        data = ser.Serial("/dev/ttyS0",115200,timeout=2)
+        data = ser.Serial("/dev/ttyS0",500000,timeout=2)
         # data.flush()
-        data.write("1:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}:{}{:03d}\0".format(direction[0], power[0], direction[1], power[1], direction[2], power[2], direction[3], power[3], direction[4], power[4], direction[5], power[5], direction[6], power[6], direction[7], power[7]).encode())
+        data.write("1:{}{:02d}:{}{:02d}:{}{:02d}:{}{:02d}:{}{:02d}:{}{:02d}:{}{:02d}:{}{:02d}\0".format(direction[0], power[0], direction[1], power[1], direction[2], power[2], direction[3], power[3], direction[4], power[4], direction[5], power[5], direction[6], power[6], direction[7], power[7]).encode())
         # data.write("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}\0".format(power).encode())
         data.close()
     else:
         # if in manual mode
-        data = ser.Serial("/dev/ttyS0",115200,timeout=2)
+        data = ser.Serial("/dev/ttyS0",500000,timeout=2)
         # data.flush()
         data.write("0\0".encode())
         data.close()
 
 def PrintPowerData(auto_control, power):
     if auto_control:
-        print("1:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}:{:03d}".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]))
+        print("1:{:02d}:{:02d}:{:02d}:{:02d}:{:02d}:{:02d}:{:02d}:{:02d}".format(power[0], power[1], power[2], power[3], power[4], power[5], power[6], power[7]))
         # print("1:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}:{:04d}".format(power))
     else:
         print("0")
@@ -141,6 +141,10 @@ def mouseCallbackFunction(event, x, y, flags, param):
             x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
             maze.maze[x, y] = not(maze.maze[x, y])
             # print(maze)
+            maze.last_pressed = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
+        maze.l_mouse_pressed = True
+    elif event == cv2.EVENT_LBUTTONUP:
+        maze.l_mouse_pressed = False
     elif event == cv2.EVENT_RBUTTONDOWN:
         p_pressed = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], (x, y))
         if p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
@@ -151,10 +155,34 @@ def mouseCallbackFunction(event, x, y, flags, param):
             else:
                 maze.begin = (x, y) # begin
             maze.start_end_state = not(maze.start_end_state)
+    elif maze.l_mouse_pressed and event == cv2.EVENT_MOUSEMOVE:
+        # print("x: {}; y: {} clicked".format(x, y))
+        p_pressed = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], (x, y))
+        # print("x: {}; y: {} clicked".format(p_pressed[0], p_pressed[1]))
+        if (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE)) != maze.last_pressed and p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
+            y = int(p_pressed[0] // (1000 / maze.MAZE_SIZE))
+            x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
+            maze.maze[x, y] = not(maze.maze[x, y])
+            # print(maze)
+            maze.last_pressed = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
+
+def GetConfig(lo_drone, hi_drone, lo_env, hi_env):
+    f = open("Control_Card.config", "r")
+    buffer = f.readline().split(':')[1]
+    lo_drone = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
+    buffer = f.readline().split(':')[1]
+    hi_drone = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
+    f.readline()
+    buffer = f.readline().split(':')[1]
+    lo_env = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
+    buffer = f.readline().split(':')[1]
+    hi_env = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
+    f.close()
+    return lo_drone, hi_drone, lo_env, hi_env
 
 class Maze:
     def __init__(self):
-        self.MAZE_SIZE = 10
+        self.MAZE_SIZE = 50
         self.begin = (0, 0)
         self.end = (self.MAZE_SIZE - 1, self.MAZE_SIZE - 1)
         self.maze = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
@@ -162,6 +190,9 @@ class Maze:
         self.maze_path = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
         self.start_end_state = False
         self.VALUE_MAX = 65000
+        self.TIMEOUT = 10000
+        self.l_mouse_pressed = False
+        self.last_dragged = (0, 0)
 
     def SolveMaze(self):
         self.maze_mask = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
@@ -169,7 +200,7 @@ class Maze:
         file = [self.end]
         point = file[0]
         self.maze_mask[point] = self.VALUE_MAX
-        while count < 100 and file != [] and point != self.begin:
+        while count < self.TIMEOUT and file != [] and point != self.begin:
             point = file.pop(0)
             if point[0] != 0 and self.maze[point[0] - 1, point[1]] == 0 and self.maze_mask[point[0] - 1, point[1]] == 0:
                 file.append((point[0] - 1, point[1]))
@@ -191,7 +222,7 @@ class Maze:
         self.maze_path = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
         point = self.begin
         count = 0
-        while count < 100 and point != self.end:
+        while count < self.TIMEOUT and point != self.end:
             if point[0] != 0 and self.maze_mask[point[0] - 1, point[1]] == self.maze_mask[point] + 1:
                 point = (point[0] - 1, point[1])
             elif point[0] != self.MAZE_SIZE - 1 and self.maze_mask[point[0] + 1, point[1]] == self.maze_mask[point] + 1:
@@ -204,12 +235,20 @@ class Maze:
                 self.maze_path[point] = 1
             count += 1
 
-# lo_drone = np.array([100, 220, 125])
-# hi_drone = np.array([125, 255, 255])
-lo_drone = np.array([40, 100, 0])
-hi_drone = np.array([100, 255, 255])
-lo_env = np.array([125, 200, 200])
-hi_env = np.array([175, 255, 255])
+# # lo_drone = np.array([100, 220, 125])
+# # hi_drone = np.array([125, 255, 255])
+# lo_drone = np.array([40, 100, 0])
+# hi_drone = np.array([100, 255, 255])
+# lo_env = np.array([125, 200, 200])
+# hi_env = np.array([175, 255, 255])
+
+lo_drone = 0
+hi_drone = 0
+lo_env = 0
+hi_env = 0
+
+lo_drone, hi_drone, lo_env, hi_env = GetConfig(lo_drone, hi_drone, lo_env, hi_env)
+
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
 color_infos_blue = (255, 0, 0)
@@ -220,8 +259,8 @@ capture_n = 0
 
 # pilot_mode = -1
 
-direction = [0, 1, 0, 0, 0, 1, 0, 0]
-power = [0, 100, 0, 0, 999, 0, 0, 0]
+direction = [0, 0, 0, 0, 0, 0, 0, 0]
+power = [0, 0, 0, 0, 0, 0, 0, 0]
 
 show_mask = False
 show_image2 = False
@@ -317,7 +356,7 @@ while True:
             stream = ShowMazePath(stream, maze, p1, p2[1]-p1[1], p3[0]-p1[0])
     # PrintCoordinatesData(p)
     # TransferCoordinatesData(p)
-    # PrintPowerData(auto_control, power)
+    PrintPowerData(auto_control, power)
     TransferPowerData(auto_control, power)
     time.sleep(0.01)
 
@@ -385,6 +424,9 @@ while True:
         pressed = True
     elif button_value==ord('p') and pressed == False:
         show_path = not(show_path)
+        pressed = True
+    elif button_value==ord('u') and pressed == False:
+        lo_drone, hi_drone, lo_env, hi_env = GetConfig(lo_drone, hi_drone, lo_env, hi_env)
         pressed = True
     elif button_value==ord('7') and pressed == False:
         capture_n = capture_n + 1
