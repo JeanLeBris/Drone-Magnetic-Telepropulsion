@@ -141,7 +141,7 @@ def mouseCallbackFunction(event, x, y, flags, param):
             x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
             maze.maze[x, y] = not(maze.maze[x, y])
             # print(maze)
-            maze.last_pressed = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
+            maze.last_dragged = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
         maze.l_mouse_pressed = True
     elif event == cv2.EVENT_LBUTTONUP:
         maze.l_mouse_pressed = False
@@ -159,30 +159,40 @@ def mouseCallbackFunction(event, x, y, flags, param):
         # print("x: {}; y: {} clicked".format(x, y))
         p_pressed = GetCoord(p1, p2[1]-p1[1], p3[0]-p1[0], (x, y))
         # print("x: {}; y: {} clicked".format(p_pressed[0], p_pressed[1]))
-        if (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE)) != maze.last_pressed and p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
+        if (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE)) != maze.last_dragged and p_pressed[0] > 0 and p_pressed[0] < 1000 and p_pressed[1] > 0 and p_pressed[1] < 1000:
             y = int(p_pressed[0] // (1000 / maze.MAZE_SIZE))
             x = int(p_pressed[1] // (1000 / maze.MAZE_SIZE))
             maze.maze[x, y] = not(maze.maze[x, y])
             # print(maze)
-            maze.last_pressed = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
+            maze.last_dragged = (p_pressed[0] // (1000 / maze.MAZE_SIZE), p_pressed[1] // (1000 / maze.MAZE_SIZE))
 
-def GetConfig(lo_drone, hi_drone, lo_env, hi_env):
+def GetConfig(lo_drone, hi_drone, lo_env, hi_env, maze):
     f = open("Control_Card.config", "r")
+    f.readline()
     buffer = f.readline().split(':')[1]
     lo_drone = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
     buffer = f.readline().split(':')[1]
     hi_drone = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
     f.readline()
+    f.readline()
     buffer = f.readline().split(':')[1]
     lo_env = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
     buffer = f.readline().split(':')[1]
     hi_env = np.array([int(buffer.split(',')[0]), int(buffer.split(',')[1]), int(buffer.split(',')[2])])
+    f.readline()
+    f.readline()
+    buffer = f.readline().split(':')[1]
+    maze.VALUE_MAX = int(buffer)
+    buffer = f.readline().split(':')[1]
+    maze.TIMEOUT = int(buffer)
+    buffer = f.readline().split(':')[1]
+    maze.MAZE_SIZE = int(buffer)
     f.close()
-    return lo_drone, hi_drone, lo_env, hi_env
+    return lo_drone, hi_drone, lo_env, hi_env, maze
 
 class Maze:
     def __init__(self):
-        self.MAZE_SIZE = 50
+        self.MAZE_SIZE = 10
         self.begin = (0, 0)
         self.end = (self.MAZE_SIZE - 1, self.MAZE_SIZE - 1)
         self.maze = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
@@ -190,7 +200,7 @@ class Maze:
         self.maze_path = np.zeros((self.MAZE_SIZE, self.MAZE_SIZE), dtype=int)
         self.start_end_state = False
         self.VALUE_MAX = 65000
-        self.TIMEOUT = 10000
+        self.TIMEOUT = 100
         self.l_mouse_pressed = False
         self.last_dragged = (0, 0)
 
@@ -247,7 +257,9 @@ hi_drone = 0
 lo_env = 0
 hi_env = 0
 
-lo_drone, hi_drone, lo_env, hi_env = GetConfig(lo_drone, hi_drone, lo_env, hi_env)
+maze = Maze()
+
+lo_drone, hi_drone, lo_env, hi_env, maze = GetConfig(lo_drone, hi_drone, lo_env, hi_env, maze)
 
 color_infos = (0, 255, 255)
 color_infos_red = (0, 0, 255)
@@ -276,11 +288,6 @@ calibrate_env = True
 auto_control = False
 pressed = False
 button_value = 0
-
-# MAZE_SIZE = 10
-# start_end_state = False
-# maze = np.zeros((MAZE_SIZE, MAZE_SIZE), dtype=int)
-maze = Maze()
 
 camera = picamera2.Picamera2()
 mode = camera.sensor_modes[1]
@@ -426,7 +433,7 @@ while True:
         show_path = not(show_path)
         pressed = True
     elif button_value==ord('u') and pressed == False:
-        lo_drone, hi_drone, lo_env, hi_env = GetConfig(lo_drone, hi_drone, lo_env, hi_env)
+        lo_drone, hi_drone, lo_env, hi_env, maze = GetConfig(lo_drone, hi_drone, lo_env, hi_env, maze)
         pressed = True
     elif button_value==ord('7') and pressed == False:
         capture_n = capture_n + 1
