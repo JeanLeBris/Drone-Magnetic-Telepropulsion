@@ -21,7 +21,7 @@ int verif = 0;
 void setup() {
   system1.begin(); // initialize system
   Serial.begin(500000);
-  //Serial2.begin(115200, SERIAL_8N1, RX2, TX2);       // initialize UART with baud rate of 115200 bps
+  // Serial2.begin(500000, SERIAL_8N1, RX2, TX2);       // initialize UART with baud rate of 115200 bps
 }
 
 void loop() {
@@ -53,7 +53,10 @@ void loop() {
         system1.joystick.updateJoystickMobile(x, y);
         system1.updatePowerFromJoystick();
       }
-      //system1.printPower();
+      if(DEBUG){
+        // system1.printPower();
+      }
       system1.updateCoils();
+    // }
   }
 }

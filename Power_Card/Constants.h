@@ -31,4 +31,6 @@ const int dir_pins[8] = {DIR_0, DIR_1, DIR_2, DIR_3, DIR_4, DIR_5, DIR_6, DIR_7}
 #define Y 39
 #define X 34
 
+#define DEBUG 1
+
 #endif

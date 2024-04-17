@@ -26,7 +26,53 @@ void System::begin() {
   }
 }
 
+void System::updateData() {
+  String data;
+  data = Serial2.readStringUntil('\0');
+  if(DEBUG){
+    Serial.println(data);
+  }
+  if(data[0] == '0'){
+    this->control_mode = 0;
+  }
+  else{
+    this->control_mode = 1;
 
+    // this->coils[0].direction = data[2] - 48;
+    // this->coils[0].target_power = data.substring(3, 6).toInt();
+    // this->coils[1].direction = data[7] - 48;
+    // this->coils[1].target_power = data.substring(8, 11).toInt();
+    // this->coils[2].direction = data[12] - 48;
+    // this->coils[2].target_power = data.substring(13, 16).toInt();
+    // this->coils[3].direction = data[17] - 48;
+    // this->coils[3].target_power = data.substring(18, 21).toInt();
+    // this->coils[4].direction = data[22] - 48;
+    // this->coils[4].target_power = data.substring(23, 26).toInt();
+    // this->coils[5].direction = data[27] - 48;
+    // this->coils[5].target_power = data.substring(28, 31).toInt();
+    // this->coils[6].direction = data[32] - 48;
+    // this->coils[6].target_power = data.substring(33, 36).toInt();
+    // this->coils[7].direction = data[37] - 48;
+    // this->coils[7].target_power = data.substring(38, 41).toInt();
+    
+    this->coils[0].direction = data[2] - 48;
+    this->coils[0].target_power = data.substring(3, 5).toInt();
+    this->coils[1].direction = data[6] - 48;
+    this->coils[1].target_power = data.substring(7, 9).toInt();
+    this->coils[2].direction = data[10] - 48;
+    this->coils[2].target_power = data.substring(11, 13).toInt();
+    this->coils[3].direction = data[14] - 48;
+    this->coils[3].target_power = data.substring(15, 17).toInt();
+    this->coils[4].direction = data[18] - 48;
+    this->coils[4].target_power = data.substring(19, 21).toInt();
+    this->coils[5].direction = data[22] - 48;
+    this->coils[5].target_power = data.substring(23, 25).toInt();
+    this->coils[6].direction = data[26] - 48;
+    this->coils[6].target_power = data.substring(27, 29).toInt();
+    this->coils[7].direction = data[30] - 48;
+    this->coils[7].target_power = data.substring(31, 33).toInt();
+  }
+}
 
 void System::updatePowerFromJoystickTest(int num){
   int x = this->joystick.x;
@@ -202,8 +248,10 @@ void System::updateCoils() {
   for(int i = 0; i < 8; i++){
     total_current += ((abs(this->coils[i].target_power) * 24) / 99) / this->coils[i].resistance;
   }
-  Serial.println(total_current);
-  
+  if(DEBUG){
+    Serial.println(total_current);
+  }
+
   if(total_current < 30){
     for(int i = 0; i < 8; i++){
       this->coils[i].setCoilPower();
