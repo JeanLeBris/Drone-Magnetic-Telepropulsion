@@ -1,4 +1,4 @@
-# Drone-Magnetic-Telepropulsion
+# Télépropulsion magnétique
 
 Réalisé par [Jean LE BRIS](https://github.com/JeanLeBris) et [Ewen MORVAN](https://github.com/EwenMorvan)
 
